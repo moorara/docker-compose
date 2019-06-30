@@ -1,0 +1,17 @@
+#
+# Ref:
+#   https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules
+#   https://prometheus.io/docs/prometheus/latest/configuration/recording_rules
+#
+
+groups:
+  - name: operations
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} is down."
