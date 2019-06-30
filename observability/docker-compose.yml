@@ -1,0 +1,185 @@
+version: "3.7"
+
+networks:
+  metrics: {}
+  tracing: {}
+  logging:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  elasticsearch_data: {}
+  prometheus_data: {}
+  grafana_data: {}
+
+x-labels: &labels
+  stack: "observability"
+
+# https://docs.docker.com/config/containers/logging/fluentd
+x-logdriver: &logdriver
+  logging:
+    driver: fluentd
+    options:
+      fluentd-address: 172.20.0.250:24224
+      tag: docker.{{.Name}}.{{.ImageName}}
+      labels: stack
+      env: SERVICE_TAGS
+
+services:
+
+  # MESSAGING
+
+  #### LOGGING
+
+  # https://hub.docker.com/_/elasticsearch
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+  elasticsearch:
+    image: elasticsearch:7.2.0
+    hostname: elasticsearch
+    container_name: elasticsearch
+    restart: always
+    networks:
+      - logging
+    ports:
+      - "9200:9200"  # REST API
+      - "9300:9300"  # Nodes Communication
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - "elasticsearch_data:/usr/share/elasticsearch/data"
+      - "./logging/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+
+  # https://hub.docker.com/_/kibana
+  # https://www.elastic.co/guide/en/kibana/current/docker.html
+  kibana:
+    image: kibana:7.2.0
+    hostname: kibana
+    container_name: kibana
+    restart: always
+    depends_on:
+      - elasticsearch
+    networks:
+      - logging
+    ports:
+      - "5601:5601"
+    volumes:
+      - "./logging/kibana.yml:/usr/share/kibana/config/kibana.yml"
+
+  # https://hub.docker.com/r/fluent/fluentd
+  fluentd:
+    build: ./fluentd
+    hostname: fluentd
+    container_name: fluentd
+    restart: always
+    depends_on:
+      - elasticsearch
+    networks:
+      logging:
+        ipv4_address: 172.20.0.250
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    command: [ "-c", "/fluentd/etc/fluent.conf" ]
+
+  #### METRICS
+
+  # https://hub.docker.com/r/prom/prometheus
+  prometheus:
+    image: prom/prometheus:v2.10.0
+    hostname: prometheus
+    container_name: prometheus
+    restart: always
+    networks:
+      - metrics
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+    volumes:
+      - "prometheus_data:/prometheus"
+      - "./metrics/alerts.yml:/alerts.yml"
+      - "./metrics/prometheus.yml:/prometheus.yml"
+    command: [ "--config.file=/prometheus.yml" ]
+
+  # https://hub.docker.com/r/prom/alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.17.0
+    hostname: alertmanager
+    container_name: alertmanager
+    restart: always
+    networks:
+      - metrics
+    ports:
+      - "9093:9093"
+    volumes:
+      - "./metrics/alertmanager.yml:/alertmanager.yml"
+    command: [ "--config.file=/alertmanager.yml" ]
+
+  # https://hub.docker.com/r/grafana/grafana
+  grafana:
+    image: grafana/grafana:6.2.5
+    hostname: grafana
+    container_name: grafana
+    restart: always
+    depends_on:
+      - prometheus
+    networks:
+      - metrics
+    ports:
+      - "3000:3000"
+    volumes:
+      - "grafana_data:/var/lib/grafana"
+      - "./metrics/grafana.ini:/grafana.ini"
+    command: [ "--config=/grafana.ini" ]
+
+  #### EXPORTERS
+
+  # https://hub.docker.com/r/prom/node-exporter
+  # https://github.com/prometheus/node_exporter
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    restart: always
+    networks:
+      - metrics
+    ports:
+      - "9100:9100"
+
+  # https://hub.docker.com/r/google/cadvisor
+  # https://github.com/google/cadvisor
+  cadvisor:
+    image: google/cadvisor:v0.33.0
+    hostname: cadvisor
+    container_name: cadvisor
+    restart: always
+    networks:
+      - metrics
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+
+  #### TRACING
+
+  # https://hub.docker.com/r/jaegertracing/all-in-one
+  # https://www.jaegertracing.io/docs/1.13/getting-started
+  jaeger:
+    image: jaegertracing/all-in-one:1.13.1
+    hostname: jaeger
+    container_name: jaeger
+    restart: always
+    networks:
+      - tracing
+    ports:
+      - "5775:5775/udp"  # agent: accept zipkin.thrift over compact thrift protocol
+      - "6831:6831/udp"  # agent: accept jaeger.thrift over compact thrift protocol
+      - "6832:6832/udp"  # agent: accept jaeger.thrift over binary thrift protocol
+      - "5778:5778"      # agent: serve configs
+      - "16686:16686"    # query: serve frontend
