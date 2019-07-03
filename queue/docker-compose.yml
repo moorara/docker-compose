@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+
+  # https://hub.docker.com/_/nats
+  nats:
+    image: nats:2.0.0
+    hostname: nats
+    container_name: nats
+    restart: always
+    ports:
+      - "4222:4222"  # Clients
+      - "6222:6222"  # Routing port for clustering
+      - "8222:8222"  # HTTP management port for information reporting
+    command: [ "-m", "8222", "--user", "user", "--pass", "pass" ]
+
+  # https://hub.docker.com/_/rabbitmq
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    hostname: rabbitmq
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
