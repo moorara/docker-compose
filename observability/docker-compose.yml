@@ -105,7 +105,7 @@ services:
 
   # https://hub.docker.com/r/prom/alertmanager
   alertmanager:
-    image: prom/alertmanager:v0.17.0
+    image: prom/alertmanager:v0.18.0
     hostname: alertmanager
     container_name: alertmanager
     restart: always
