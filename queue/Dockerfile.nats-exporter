@@ -1,0 +1,17 @@
+# https://github.com/nats-io/prometheus-nats-exporter
+
+FROM golang:1.12-alpine AS builder
+RUN apk add --no-cache curl jq unzip && \
+    release=$(curl -s https://api.github.com/repos/nats-io/prometheus-nats-exporter/releases/latest | jq -r '.tag_name') && \
+    curl -fsSL "https://github.com/nats-io/prometheus-nats-exporter/archive/${release}.tar.gz" -o source.tar.gz && \
+    mkdir -p /go/src/github.com/nats-io/prometheus-nats-exporter && \
+    tar --strip-components=1 -C /go/src/github.com/nats-io/prometheus-nats-exporter -xz -f source.tar.gz && \
+    cd /go/src/github.com/nats-io/prometheus-nats-exporter && \
+    go install
+
+FROM alpine:3.10
+EXPOSE 7777
+COPY --from=builder /go/bin/prometheus-nats-exporter /usr/local/bin/
+RUN chown -R nobody:nogroup /usr/local/bin/prometheus-nats-exporter
+USER nobody
+ENTRYPOINT [ "prometheus-nats-exporter" ]
