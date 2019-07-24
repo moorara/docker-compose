@@ -30,8 +30,6 @@ x-logdriver: &logdriver
 
 services:
 
-  # MESSAGING
-
   #### LOGGING
 
   # https://hub.docker.com/_/elasticsearch
