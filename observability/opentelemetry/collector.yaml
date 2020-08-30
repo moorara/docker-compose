@@ -1,0 +1,44 @@
+# Extensions are provided to monitor the health of the OpenTelemetry Collector.
+# Extensions are optional.
+extensions:
+  health_check:
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+# Receivers configure how data get into the OpenTelemetry Collector.
+# One or more receivers must be configured.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:55680
+
+# Processors are run on data between being received and being exported.
+# Processors are optional though some are recommended.
+processors:
+  batch:
+  queued_retry:
+
+# Exporters configure how data are sent to one or more destinations.
+# One or more exporters must be configured.
+exporters:
+  logging:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    # namespace: test
+  jaeger:
+    endpoint: jaeger:14250
+    insecure: true
+
+# The service section configures what features are enabled in the OpenTelemetry Collector.
+service:
+  extensions: [health_check, zpages]
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: []
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [batch, queued_retry]
+      exporters: [jaeger]
