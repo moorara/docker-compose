@@ -3,6 +3,7 @@ version: "3.7"
 networks:
   metrics: {}
   tracing: {}
+  opentelemetry: {}
   logging:
     driver: bridge
     ipam:
@@ -184,3 +185,29 @@ services:
       - "14250:14250"    # collector:  accept model.proto
       - "9411:9411"      # collector:  Zipkin compatible endpoint (optional)
       - "16686:16686"    # query:      serve frontend
+
+  #### OPENTELEMETRY
+
+  # https://hub.docker.com/r/otel/opentelemetry-collector
+  # https://opentelemetry.io/docs/collector/about
+  opentelemetry-collector:
+    image: otel/opentelemetry-collector:0.8.0
+    hostname: opentelemetry-collector
+    container_name: opentelemetry-collector
+    restart: always
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - metrics
+      - tracing
+      - opentelemetry
+    ports:
+      - "13133:13133"  # Health check extension port
+      - "55679:55679"  # ZPages endpoint
+      - "55680:55680"  # OpenTelemetry receiver endpoint
+      - "8888:8888"    # Internal metrics endpoint
+      - "8889:8889"    # Received metrics endpoint
+    volumes:
+      - "./opentelemetry/collector.yaml:/conf/collector.yaml"
+    command: [ "--config=/conf/collector.yaml" ]
