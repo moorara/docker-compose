@@ -68,7 +68,7 @@ services:
 
   # https://hub.docker.com/_/postgres
   postgres:
-    image: postgres:12.6
+    image: postgres:12.7
     hostname: postgres
     container_name: postgres
     restart: always
