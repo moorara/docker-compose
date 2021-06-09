@@ -1,7 +1,7 @@
 # https://www.rabbitmq.com/prometheus.html
 # https://github.com/deadtrickster/prometheus_rabbitmq_exporter
 
-FROM rabbitmq:3.8.16-management-alpine
+FROM rabbitmq:3.8.17-management-alpine
 
 # Install prometheus_rabbitmq_exporter plugin
 RUN mkdir -p /usr/lib/rabbitmq/plugins
