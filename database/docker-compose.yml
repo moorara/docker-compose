@@ -35,7 +35,7 @@ services:
 
   # https://hub.docker.com/_/mongo
   mongo:
-    image: mongo:4.4.6
+    image: mongo:5.0.0
     hostname: mongo
     container_name: mongo
     restart: always
