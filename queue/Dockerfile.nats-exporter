@@ -1,6 +1,6 @@
 # https://github.com/nats-io/prometheus-nats-exporter
 
-FROM golang:1.16-alpine AS builder
+FROM golang:1.17-alpine AS builder
 RUN apk add --no-cache curl jq unzip && \
     release=$(curl -s https://api.github.com/repos/nats-io/prometheus-nats-exporter/releases/latest | jq -r '.tag_name') && \
     curl -fsSL "https://github.com/nats-io/prometheus-nats-exporter/archive/${release}.tar.gz" -o source.tar.gz && \
