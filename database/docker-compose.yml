@@ -86,7 +86,7 @@ services:
   # https://hub.docker.com/r/cockroachdb/cockroach
   # https://www.cockroachlabs.com/docs/v20.1/start-a-local-cluster-in-docker-linux
   cockroach:
-    image: cockroachdb/cockroach:v21.1.8
+    image: cockroachdb/cockroach:v21.1.9
     hostname: cockroach
     container_name: cockroach
     restart: always
@@ -99,7 +99,7 @@ services:
       - "cockroach_data:/cockroach/cockroach-data"
     command: [ "start", "--insecure" ]
   cockroach-init:
-    image: cockroachdb/cockroach:v21.1.8
+    image: cockroachdb/cockroach:v21.1.9
     hostname: cockroach-init
     container_name: cockroach-init
     depends_on:
