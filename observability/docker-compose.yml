@@ -118,7 +118,7 @@ services:
 
   # https://hub.docker.com/r/grafana/grafana
   grafana:
-    image: grafana/grafana:8.2.1
+    image: grafana/grafana:8.2.2
     hostname: grafana
     container_name: grafana
     restart: always
