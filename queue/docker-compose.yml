@@ -8,7 +8,7 @@ services:
 
   # https://hub.docker.com/_/nats
   nats:
-    image: nats:2.6.5
+    image: nats:2.6.6
     hostname: nats
     container_name: nats
     restart: always
