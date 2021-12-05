@@ -138,7 +138,7 @@ services:
   # https://hub.docker.com/r/prom/node-exporter
   # https://github.com/prometheus/node_exporter
   node-exporter:
-    image: prom/node-exporter:v1.3.0
+    image: prom/node-exporter:v1.3.1
     hostname: node-exporter
     container_name: node-exporter
     restart: always
